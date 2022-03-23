@@ -25,4 +25,4 @@ Resources:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: shared-layer
-      ContentUri: ../shared
+      ContentUri: shared/

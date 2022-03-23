@@ -1,0 +1,6 @@
+[submodule "git-submodules-with-shared-lambda-layers-poc-shared"]
+	path = git-submodules-with-shared-lambda-layers-poc-shared
+	url = https://github.com/huilen/git-submodules-with-shared-lambda-layers-poc-shared
+[submodule "shared"]
+	path = shared
+	url = https://github.com/huilen/git-submodules-with-shared-lambda-layers-poc-shared
