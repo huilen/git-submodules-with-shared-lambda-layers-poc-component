@@ -41,7 +41,7 @@ One important thing that one have to understand about Git submodules is that the
 
 A Git submodule becomes a Git submodule only inside another repository (let's call it "super" repository) which declares a normal repository as a Git submodule.
 
-You should never expect that a push in the super repository should cause a push in the submodules. Since they are independent each other, you need to push in each submodule. The only thing that the super repository has is just a reference to the repositories of the submodules, but they are independent repositories.
+You should never expect that a commit in the super repository should cause a commit in the submodules. Since they are independent each other, you need to commit in each submodule. The only thing that the super repository has is just a reference to the repositories of the submodules, but they are independent repositories.
 
 Let's say we have three repositories: A, B and C.
 
@@ -50,10 +50,10 @@ They are all just common and plain repositories, there is no magic there.
 Now, we can make A refer to B and C as submodules, doing this:
 
 ```
-git clone <Git url for cloning repository A>
+git clone <Git url for cloning repository A> A
 cd A
-git submodule add <Git url for cloning repository B>
-git submodule add <Git url for cloning repository C>
+git submodule add <Git url for cloning repository B> B
+git submodule add <Git url for cloning repository C> C
 git commit -m "Adding submodules B and C"
 git push origin main
 ```
@@ -71,17 +71,100 @@ The answer is NO. This is because A is still pointing to the previous version of
 If you want to update to the new version you will need to do the following:
 
 ```
-git submodule update B
-git submodule update C
-git commit -m "Update reference of B and C"
+cd shared/
+git pull origin main
+cd ..
+git add shared
+git commit -m "Update reference to B repository"
 git push origin main
 ```
 
-Only then A will be pointing to the new version of B and C.
+Only then A will be pointing to the new version of B.
+
+Also, keep in mind that whenever you clone the super repository you
+will need to initialize submodules, thus:
+
+```
+git clone <super repository>
+git submodule update --init <submodule>
+```
+
+Or you will see the submodule empty.
+
+### How to use branches with submodules
+
+Let's say we have two branches for the super repository: main and
+dev. We should have also these two branches for each submodule too.
+
+In this case we have only one submodule called "shared".
+
+#### How to commit a new feature into submodule
+
+Let's see how we would commit a new feature into shared submodule:
+```
+git checkout dev # move to dev branch in super repository
+cd shared/
+git checkout dev # move to dev branch in shared repository
+echo something > feature.txt
+git add feature.txt
+git commit -m "add new feature"
+cd ..
+git add shared
+git commit -m "update reference of shared submodule"
+git push origin dev
+```
+
+That would be all. Now, have in mind that whenever you change to
+another branch (with git checkout <branch>) you should always update
+the submodule:
+
+```
+git checkout main
+git submodule update shared
+```
+
+If you don't do the update, in this case you will see the contents of
+the dev branch instead of the contents of main branch.
+
+#### How to commit a hot fix
+
+Let's say we have to commit a hot fix into main branch. We would do
+the following:
+
+```
+git checkout main # move to main branch in super repository
+cd shared/
+git checkout main # move to main branch in shared repository
+echo hotfix > hotfix.txt # create hot fix
+git add hotfix.txt
+git commit -m "add hotfix"
+git push origin main
+git add shared
+git commit -m "update reference of shared submodule"
+git push origin main
+```
+
+You already have the hot fix in main branch, now you need to merge
+main back into dev branch so you include your hot fix there too. In
+order to do this you will need to merge first the submodule, and then
+the super repository:
+
+```
+git checkout dev
+cd shared/
+git checkout dev
+git merge main
+git commit
+git push origin main
+cd ..
+git add shared
+git commit -m "update reference of shared submodule"
+git push origin main
+```
 
 #### ATENTION
 
-You should never commit a change in the super repository without pushing first your changes in the submodules.
+If you make a change into a submodule, you should never commit in the super repository without commiting and pushing the change first in the submodule.
 
 If you commit something in a submodule, without making a push, and then you do a "git add" of the submodule in the super repository and commit and push in the super repository, you will end with a reference in the super repository to a submodule version that doesn't exist in the remote (because you have never pushed it).
 
